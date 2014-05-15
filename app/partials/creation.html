@@ -1,0 +1,123 @@
+<div class="row">
+  <div class="col-md-6">
+    <div class="row">
+      <!-- Algorithms Panel -->
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Algorithms</h3>
+          </div>
+          <div class="panel-body">
+            <div class="list-group" id="algorithms">
+              <a href="" class="list-group-item" ng-repeat="algorithm in algorithms"
+                 ng-class="{active: currentAlgorithm == algorithm}" ng-click="setAlgorithm(algorithm)">
+                {{algorithm}}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problems Panel -->
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Problems</h3>
+          </div>
+          <div class="panel-body">
+            <div class="list-group" id="problems">
+              <a href="" class="list-group-item" ng-repeat="problem in problems"
+                 ng-class="{active: currentProblem == problem}" ng-click="setProblem(problem)">
+                {{problem}}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <input type="button" class="btn btn-default btn-primary" id="btnGenerate" value="Generate Experiment"
+               ng-disabled="!areDetailsValid()" ng-click="generateExperiment()"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parameters Panel -->
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Parameters</h3>
+      </div>
+      <div class="panel-body">
+        <div class="col-md-12">
+          <div class="row">
+            <div class="col-md-12">
+              <span class="label label-success" style="display: block;" id="variations">
+                Variations: {{variations}}
+              </span>
+            </div>
+          </div>
+          <div class="row top-buffer">
+            <div class="col-md-6">
+              <div class="list-group" id="parameters">
+                <div class="list-group-item" ng-repeat="(parameter, checked) in parameters"
+                     ng-class="{active: currentParameter == parameter}" ng-click="setParameter(parameter)">
+                  <div class="checkbox">
+                    <input type="checkbox" ng-model="checked"
+                           ng-disabled="parameter != currentParameter && !areDetailsValid()"
+                           ng-change="toggleParameter(parameter)"/> {{parameter}}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div id="paramDetails" class="list-group" ng-show="currentParameterDetails != null">
+
+                <!-- Details for 'choice' -->
+                <div class="list-group-item" ng-if="currentParameterDetails.type == 'choice'"
+                     ng-repeat="(value, checked) in currentParameterDetails.values">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" ng-model="checked" ng-change="toggleChoice(value)"/> {{value}}
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Details for 'intarray' -->
+                <div class="form-group" ng-class="{'has-error': !input.isValid}"
+                     ng-if="currentParameterDetails.type == 'intarray'"
+                     ng-repeat="input in currentParameterDetails.values">
+                  <input type="number" class="form-control" ng-model="input.value"
+                         ng-change="validateInput(input)"/>
+                </div>
+
+                <!-- Details for 'doublearray' -->
+                <div class="form-group" ng-class="{'has-error': !input.isValid}"
+                     ng-if="currentParameterDetails.type == 'doublearray'"
+                     ng-repeat="input in currentParameterDetails.values">
+                  <input type="number" class="form-control" ng-model="input.value"
+                         ng-change="validateInput(input)"/>
+                </div>
+
+                <!-- Details for 'bool'-->
+                <span ng-if="currentParameterDetails.type == 'bool'">Boolean parameter: True / False</span>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $('#algorithms, #problems').slimScroll({
+    height: '300px'
+  });
+
+  $('#parameters, #paramDetails').slimScroll({
+    height: '380px'
+  });
+</script>

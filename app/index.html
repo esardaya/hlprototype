@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="heuristicLab">
+  <head>
+    <meta charset="utf-8">
+    <title>HeuristicLab Prototype</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="css/app.css"/>
+  </head>
+  <body ng-controller="HeuristicLabMainCtrl">
+
+    <div class="col-md-12 container top-buffer">
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+          <div class="panel panel-default main">
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-md-2">
+                  <div class="btn-group navigation" ng-show="!progress.visible">
+                    <a href="#/creation" class="btn btn-default" ng-class="{active: currentView == 'creation'}">
+                      <span class="glyphicon glyphicon-home"></span> Create
+                    </a>
+                    <a href="#/results" class="btn btn-default"
+                       ng-class="{disabled: !experimentAvailable, active: currentView == 'results'}">
+                      <span class="glyphicon glyphicon-list-alt"></span> Results
+                    </a>
+                  </div>
+                </div>
+                <div class="col-md-8">
+                  <img src="http://dev.heuristiclab.com/trac/hl/core/chrome/site/HeuristicLabBanner.png"
+                       class="img-responsive center-block"/>
+                </div>
+              </div>
+              <div class="row top-buffer">
+                <div ng-show="!progress.visible" class="col-md-12">
+                  <div ng-view></div>
+                </div>
+                <div ng-show="progress.visible" class="col-md-6 col-md-offset-3 loading-progress">
+                  <div class="{{progress.class}}">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="{{progress.value}}"
+                         aria-valuemin="0" aria-valuemax="100" style="{{'width: ' + progress.value + '%'}}"></div>
+                  </div>
+                  <div>
+                    <span>{{progress.text}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title">Log</h3>
+            </div>
+            <div class="panel-body log">
+              <div ng-repeat="entry in logMessages" ng-class="{error: entry.type == 'error'}">{{entry.message}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- JavaScript files -->
+    <!-- jQuery is used for JavaScript animations (include this before angular.js) -->
+    <!-- In production use:
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/x.x.x/angular.min.js"></script>
+    -->
+    <script src="bower_components/jquery/jquery.js"></script>
+    <script src="bower_components/slimScroll/jquery.slimscroll.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/services.js"></script>
+    <script src="js/controllers.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/directives.js"></script>
+
+    <script>
+      $('.log').slimScroll({
+        height: '120px'
+      });
+    </script>
+  </body>
+</html>

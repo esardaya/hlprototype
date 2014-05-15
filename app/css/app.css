@@ -1,0 +1,32 @@
+/* app css stylesheet */
+
+.main {
+    height: 620px;
+}
+
+.top-buffer {
+    margin-top: 20px;
+}
+
+.loading-progress {
+    margin-top: 200px;
+}
+
+.log {
+    height: 120px;
+}
+
+.navigation {
+    margin-top: 40px;
+}
+
+div.list-group-item.active {
+    z-index: 2;
+    color: #fff;
+    background-color: #428bca;
+    border-color: #428bca;
+}
+
+.error {
+    color: red;
+}

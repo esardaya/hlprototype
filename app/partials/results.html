@@ -1,0 +1,64 @@
+<div class="row">
+  <div class="col-md-6">
+    <div class="row">
+      <!-- Variations Panel -->
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Variations</h3>
+          </div>
+          <div class="panel-body">
+            <div class="list-group" id="optimizers">
+              <a href="" class="list-group-item" ng-repeat="optimizer in experiment"
+                 ng-class="{active: currentOptimizer == optimizer}" ng-click="setOptimizer(optimizer)">
+                {{optimizer['Name']}}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+        <input type="button" class="btn btn-default btn-primary" disabled value="Upload"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parameters Panel -->
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div id="variationDetailsPanel">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Parameter Name</th>
+                <th>Parameter Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="(name, value) in currentOptimizer['Parameters']">
+                <td>{{$index + 1}}</td>
+                <td>{{name}}</td>
+                <td>{{value != null ? value : 'null'}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $('#variationDetailsPanel').slimScroll({
+    height: '440px'
+  });
+
+  $('#optimizers').slimScroll({
+    height: '350px'
+  });
+</script>
