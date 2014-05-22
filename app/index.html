@@ -1,15 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="heuristicLab">
+<html lang="en" ng-app="heuristicLab" ng-csp>
   <head>
     <meta charset="utf-8">
     <title>HeuristicLab Prototype</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Stylesheets -->
+    <link rel="stylesheet" href="bower_components/angular/angular-csp.css">
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="css/app.css"/>
   </head>
   <body ng-controller="HeuristicLabMainCtrl">
 
+    <!--<iframe id="sandbox" src="sandbox.html" style="display: none"></iframe>-->
     <div class="col-md-12 container top-buffer">
       <div class="row">
         <div class="col-md-8 col-md-offset-2">
@@ -17,7 +19,7 @@
             <div class="panel-body">
               <div class="row">
                 <div class="col-md-2">
-                  <div class="btn-group navigation" ng-show="!progress.visible">
+                  <div class="btn-group navigation" ng-show="!progress.visible && isAuthenticated">
                     <a href="#/creation" class="btn btn-default" ng-class="{active: currentView == 'creation'}">
                       <span class="glyphicon glyphicon-home"></span> Create
                     </a>
@@ -30,6 +32,10 @@
                 <div class="col-md-8">
                   <img src="http://dev.heuristiclab.com/trac/hl/core/chrome/site/HeuristicLabBanner.png"
                        class="img-responsive center-block"/>
+                </div>
+                <div class="col-md-2">
+                  <input type="button" class="btn btn-primary" value="Sign out"
+                         ng-show="isAuthenticated" ng-click="logout()">
                 </div>
               </div>
               <div class="row top-buffer">
@@ -78,10 +84,10 @@
     <script src="js/filters.js"></script>
     <script src="js/directives.js"></script>
 
-    <script>
+    <!--<script>
       $('.log').slimScroll({
         height: '120px'
       });
-    </script>
+    </script>-_>
   </body>
 </html>

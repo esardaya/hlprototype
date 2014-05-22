@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head lang="en">
+    <script src="bower_components/jquery/jquery.js"></script>
+  </head>
+  <body>
+    <script>
+      var service = {};
+
+      service.worker = new Worker('js/worker.js');
+      service.messageQueue = [];
+
+      service.worker.onmessage = function (e) {
+        if (e.data.operation) {
+          var pendingOperation = service.messageQueue[0].data.operation;
+          var defer = service.messageQueue[0].defer;
+
+          switch (e.data.operation) {
+            case 'error':
+            case pendingOperation:
+              if (e.data.operation == 'error') {
+                defer.reject(e.data);
+              } else {
+                defer.resolve(e.data);
+              }
+              // Since it has been resolved we remove this message from the queue
+              service.messageQueue.shift();
+              // Post the next message in queue, if any
+              if (service.messageQueue.length > 0) {
+                service.worker.postMessage(service.messageQueue[0].data);
+              }
+              break;
+            case 'log':
+            case 'progress':
+              defer.notify(e.data);
+              break;
+            default:
+              console.error('Operation "' + e.data.operation + '" not supported');
+              service.messageQueue.shift();
+              break;
+          }
+        } else {
+          console.log('Unknown message received from worker: ' + e.data);
+        }
+      };
+
+      service.doWork = function (data) {
+        if (!data.operation || typeof(data.operation) !== "string") {
+          console.error('Missing "operation" for doWork');
+          return;
+        }
+
+        var defer = jQuery.Deferred();
+        // Enqueue the request
+        service.messageQueue.push({defer: defer, data: data});
+
+        // If there aren't other requests in queue, post the message to the worker
+        if (service.messageQueue.length < 2) {
+          service.worker.postMessage(data);
+        }
+
+        return defer.promise();
+      };
+
+      // Set up message event handler:
+      window.addEventListener('message', function(event) {
+        var promise = service.doWork(event.data);
+        event.source.postMessage(promise, event.origin);
+      });
+    </script>
+  </body>
+</html>

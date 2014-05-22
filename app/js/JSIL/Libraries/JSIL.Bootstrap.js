@@ -2242,21 +2242,41 @@ $jsilcore.hashContainerBase = function ($) {
   };
 
   $.RawMethod(false, "$areEqual", function HashContainer_AreEqual (lhs, rhs) {
-    if (lhs === rhs)
-      return true;
+    var T = this._comparer != null ? this._comparer.T : null;
+    var eqComparer = this._comparer != null ?
+      function () {
+        return (eqComparer = JSIL.Memoize(mscorlib.System.Collections.Generic.IEqualityComparer$b1.Of(T).Equals)) ();
+      } : null;
 
-    return JSIL.ObjectEquals(lhs, rhs);
+    if (eqComparer != null) {
+      return eqComparer().Call(this._comparer, null, lhs, rhs);
+    } else {
+      if (lhs === rhs)
+        return true;
+
+      return JSIL.ObjectEquals(lhs, rhs);
+    }
   });
 
-  $.RawMethod(false, "$searchBucket", function HashContainer_SearchBucket (key) {
-    var hashCode = JSIL.ObjectHashCode(key);
+  $.RawMethod(false, "$searchBucket", function HashContainer_SearchBucket(key) {
+    var T = this._comparer != null ? this._comparer.T : null;
+    var hasher = this._comparer != null ?
+      function () {
+        return (hasher = JSIL.Memoize(mscorlib.System.Collections.Generic.IEqualityComparer$b1.Of(T).GetHashCode)) ();
+      } : null;
+
+    var hashCode = hasher != null ? hasher().Call(this._comparer, null, key) : JSIL.ObjectHashCode(key);
     var bucket = this._dict[hashCode];
-    if (!bucket)
-      return null;
+
+    if (!bucket) {
+        return null;
+    }
 
     for (var i = 0, l = bucket.length; i < l; i++) {
-      var bucketEntry = bucket[i];
-
+        var bucketEntry = bucket[i];
+      // Try to use comparer first
+      if (this._comparer != null)
+          return bucketEntry;
       if (this.$areEqual(bucketEntry.key, key))
         return bucketEntry;
     }
@@ -2265,7 +2285,13 @@ $jsilcore.hashContainerBase = function ($) {
   });
 
   $.RawMethod(false, "$removeByKey", function HashContainer_Remove (key) {
-    var hashCode = JSIL.ObjectHashCode(key);
+    var T = this._comparer != null ? this._comparer.T : null;
+    var hasher = this._comparer != null ?
+      function () {
+        return (hasher = JSIL.Memoize(mscorlib.System.Collections.Generic.IEqualityComparer$b1.Of(T).GetHashCode)) ();
+      } : null;
+
+    var hashCode = hasher != null ? hasher().Call(this._comparer, null, key) : JSIL.ObjectHashCode(key);
     var bucket = this._dict[hashCode];
     if (!bucket)
       return false;
@@ -2284,8 +2310,15 @@ $jsilcore.hashContainerBase = function ($) {
   });
 
   $.RawMethod(false, "$addToBucket", function HashContainer_Add (key, value) {
-    var hashCode = JSIL.ObjectHashCode(key);
+    var T = this._comparer != null ? this._comparer.T : null;
+    var hasher = this._comparer != null ?
+      function () {
+        return (hasher = JSIL.Memoize(mscorlib.System.Collections.Generic.IEqualityComparer$b1.Of(T).GetHashCode)) ();
+      } : null;
+
+    var hashCode = hasher != null ? hasher().Call(this._comparer, null, key) : JSIL.ObjectHashCode(key);
     var bucket = this._dict[hashCode];
+
     if (!bucket)
       this._dict[hashCode] = bucket = [];
 

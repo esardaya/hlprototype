@@ -467,8 +467,8 @@ function finishLoading() {
   clearInterval(state.interval);
   state.interval = null;
 
-  postMessage({ operation: 'initialize' });
   finishedLoading();
+
   return;
 };
 

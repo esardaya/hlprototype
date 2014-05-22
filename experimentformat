@@ -1,0 +1,14 @@
+// Experiment
+{
+	'Algorithm': 'Namespace.Type',
+	'Problem': 'Namespace.Type',
+	'Variations': 
+	[
+		{
+			'Name' : 'EvolutionStrategy {...}',
+			'Parameters' : 
+				{
+					
+				}
+	]
+}

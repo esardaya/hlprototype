@@ -56,12 +56,12 @@ heuristicLabServices.factory('CreationService', ['$rootScope', function ($rootSc
   service.updateCurrentParameterDetails = function (details) {
     this.currentParameterDetails = details;
     $rootScope.$broadcast("currentParameterDetailsUpdated");
-  }
+  };
 
   service.updateVariations = function (variations) {
     this.variations = variations;
     $rootScope.$broadcast("variationsUpdated");
-  }
+  };
 
   return service;
 }]);
@@ -71,11 +71,16 @@ heuristicLabServices.factory('SharedDataService', ['$rootScope', function ($root
   var service = {};
 
   service.currentView = 'creation';
-  service.experiment = [];
+  service.experiment = { 'Variations': [] };
   service.logMessages = [];
   service.progressData = null;
   service.loadingMessage = null;
   service.currentOptimizer = null;
+
+  service.isAuthenticated = false;
+  service.authenticationToken = null;
+
+  service.job = {};
 
   function addLogEntry(type, message) {
     var lines = message.split("\n");
@@ -110,6 +115,16 @@ heuristicLabServices.factory('SharedDataService', ['$rootScope', function ($root
     $rootScope.$broadcast("loadingStopped");
   };
 
+  service.updateAuthenticated = function (isAuthenticated) {
+    this.isAuthenticated = isAuthenticated;
+    $rootScope.$broadcast("authenticationUpdated");
+  };
+
+  service.updateAuthenticationToken = function (authenticationToken) {
+    this.authenticationToken = authenticationToken;
+    $rootScope.$broadcast("authenticationToken");
+  };
+
   service.addLogMessage = function(message) {
     addLogEntry('log', message);
     $rootScope.$broadcast("logUpdated");
@@ -123,6 +138,11 @@ heuristicLabServices.factory('SharedDataService', ['$rootScope', function ($root
   service.updateCurrentOptimizer = function (optimizer) {
     this.currentOptimizer = optimizer;
     $rootScope.$broadcast("currentOptimizerUpdated");
+  };
+
+  service.updateCurrentJob = function (job) {
+    this.job = job;
+    $rootScope.$broadcast("currentJobUpdated");
   };
 
   return service;
