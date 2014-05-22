@@ -10,13 +10,11 @@ var heuristicLab = angular.module('heuristicLab', [
 
 heuristicLab.config(['$compileProvider',
   function($compileProvider) {
-
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|chrome-extension):/);
-    console.log("Configured");
   }
 ]);
 
-heuristicLab.config(['$sceDelegateProvider',
+/*heuristicLab.config(['$sceDelegateProvider',
   function($sceDelegateProvider) {
     $sceDelegateProvider.resourceUrlWhitelist([
       // Allow same origin resource loads.
@@ -24,29 +22,47 @@ heuristicLab.config(['$sceDelegateProvider',
       // Allow loading from our assets domain.  Notice the difference between * and **.
       'http://localhost:8000/app/partials/**']);
   }
-]);
+]);*/
 
 heuristicLab.config(['$routeProvider',
   function($routeProvider) {
     $routeProvider.
       when('/login', {
-        templateUrl: 'http://localhost:8000/app/partials/login.html',
+        templateUrl: 'partials/login.html',
         controller: 'HeuristicLabLoginCtrl'
       }).
       when('/creation', {
-        templateUrl: 'http://localhost:8000/app/partials/creation.html',
+        templateUrl: 'partials/creation.html',
         controller: 'HeuristicLabCreationCtrl'
       }).
-      when('/results', {
-        templateUrl: 'http://localhost:8000/app/partials/upload.html',
+      when('/upload', {
+        templateUrl: 'partials/upload.html',
         controller: 'HeuristicLabUploadCtrl'
       }).
-      when('/job', {
-        templateUrl: 'http://localhost:8000/app/partials/job.html',
-        controller: 'HeuristicLabJobCtrl'
+      when('/run', {
+        templateUrl: 'partials/run.html',
+        controller: 'HeuristicLabRunCtrl'
       }).
       otherwise({
-        redirectTo: '/creation'
+        redirectTo: '/login'
       });
   }
 ]);
+
+heuristicLab.directive('slimScroll', function() {
+  return {
+    // Restrict it to be an attribute in this case
+    restrict: 'A',
+    // responsible for registering DOM listeners as well as updating the DOM
+    link: function(scope, element, attrs) {
+      $(element).slimScroll({
+        height: attrs.slimScroll + 'px'
+      });
+    }
+  };
+});
+
+heuristicLab.constant('hlConfig', {
+  url: 'http://localhost:51802/api/',
+  refreshRate: 4000
+});

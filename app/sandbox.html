@@ -1,72 +1,106 @@
 <!DOCTYPE html>
 <html>
   <head lang="en">
-    <script src="bower_components/jquery/jquery.js"></script>
   </head>
   <body>
     <script>
-      var service = {};
-
-      service.worker = new Worker('js/worker.js');
-      service.messageQueue = [];
-
-      service.worker.onmessage = function (e) {
-        if (e.data.operation) {
-          var pendingOperation = service.messageQueue[0].data.operation;
-          var defer = service.messageQueue[0].defer;
-
-          switch (e.data.operation) {
-            case 'error':
-            case pendingOperation:
-              if (e.data.operation == 'error') {
-                defer.reject(e.data);
-              } else {
-                defer.resolve(e.data);
-              }
-              // Since it has been resolved we remove this message from the queue
-              service.messageQueue.shift();
-              // Post the next message in queue, if any
-              if (service.messageQueue.length > 0) {
-                service.worker.postMessage(service.messageQueue[0].data);
-              }
-              break;
-            case 'log':
-            case 'progress':
-              defer.notify(e.data);
-              break;
-            default:
-              console.error('Operation "' + e.data.operation + '" not supported');
-              service.messageQueue.shift();
-              break;
-          }
-        } else {
-          console.log('Unknown message received from worker: ' + e.data);
-        }
-      };
-
-      service.doWork = function (data) {
-        if (!data.operation || typeof(data.operation) !== "string") {
-          console.error('Missing "operation" for doWork');
-          return;
-        }
-
-        var defer = jQuery.Deferred();
-        // Enqueue the request
-        service.messageQueue.push({defer: defer, data: data});
-
-        // If there aren't other requests in queue, post the message to the worker
-        if (service.messageQueue.length < 2) {
-          service.worker.postMessage(data);
-        }
-
-        return defer.promise();
-      };
-
-      // Set up message event handler:
-      window.addEventListener('message', function(event) {
-        var promise = service.doWork(event.data);
-        event.source.postMessage(promise, event.origin);
+      window.addEventListener('message', function (event) {
+        caller = event;
+        worker.postMessage(event.data);
       });
+    </script>
+
+    <script id="worker" type="javascript">
+      "use strict";
+
+      var jsilConfig = {};
+
+      var window = {
+        $scriptLoadFailed: null
+      };
+
+      var baseUrl = "";
+      var problems = null;
+      var algorithms = null;
+      var parameters = [];
+      var paramValues = [];
+      var algorithmInstances = [];
+
+      var currentAlgorithm = null;
+      var currentProblem = null;
+
+      var assembly = null;
+      var assemblies = null;
+
+      var programAssembly = null;
+      var program = null;
+
+
+      self.onmessage = function (event) {
+        var data = event.data;
+
+        if (data.operation) {
+          try {
+            switch (data.operation) {
+              case 'initialize':
+
+                baseUrl = data.url;
+                var index = baseUrl.indexOf('index.html');
+                if (index != -1) {
+                  baseUrl = baseUrl.substring(0, index);
+                }
+
+                jsilConfig = {
+                  printStackTrace: true,
+                  environment: "webworker",
+                  scriptRoot: baseUrl + "js/JSIL/HeuristicLab/",
+                  libraryRoot: baseUrl + "js/JSIL/Libraries/",
+                  manifests: [
+                        baseUrl + "js/JSIL/HeuristicLab/Test.exe"
+                  ]
+                };
+
+                importScripts(baseUrl + 'js/worker-functions.js');
+
+                importScripts(baseUrl + 'js/JSIL/Libraries/JSIL.js');
+
+                beginLoading();
+                break;
+              case 'getAlgorithms':
+                getAlgorithms();
+                break;
+              case 'getProblems':
+                getProblems(data);
+                break;
+              case 'getParameters':
+                getParameters(data);
+                break;
+              case 'getParameterDetails':
+                getParameterDetails(data);
+                break;
+              case 'parameterToggled':
+                parameterToggled(data);
+                break;
+              case 'generateExperiment':
+                generateExperiment(data);
+                break;
+            }
+          } catch (error) {
+            onError(error);
+          }
+        }
+      };
+    </script>
+
+    <script>
+      var blob = new Blob([document.querySelector('#worker').textContent]);
+
+      var worker = new Worker(window.URL.createObjectURL(blob));
+      var caller;
+
+      worker.onmessage = function (e) {
+        caller.source.postMessage(e.data, caller.origin);
+      };
     </script>
   </body>
 </html>

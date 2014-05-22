@@ -140,23 +140,18 @@ heuristicLabServices.factory('SharedDataService', ['$rootScope', function ($root
     $rootScope.$broadcast("currentOptimizerUpdated");
   };
 
-  service.updateCurrentJob = function (job) {
+  service.updateJob = function (job) {
     this.job = job;
-    $rootScope.$broadcast("currentJobUpdated");
+    $rootScope.$broadcast("jobUpdated");
   };
 
   return service;
 
 }]);
 
-heuristicLabServices.factory('WorkerService', ['$q', function ($q) {
+heuristicLabServices.factory('WorkerService', ['$q', '$window', function ($q, $window) {
 
-  var service = {};
-
-  service.worker = new Worker('js/worker.js');
-  service.messageQueue = [];
-
-  service.worker.onmessage = function (e) {
+  $window.addEventListener('message', function(e) {
     if (e.data.operation) {
       var pendingOperation = service.messageQueue[0].data.operation;
       var defer = service.messageQueue[0].defer;
@@ -173,7 +168,7 @@ heuristicLabServices.factory('WorkerService', ['$q', function ($q) {
           service.messageQueue.shift();
           // Post the next message in queue, if any
           if (service.messageQueue.length > 0) {
-            service.worker.postMessage(service.messageQueue[0].data);
+            service.sandbox.contentWindow.postMessage(service.messageQueue[0].data, '*');
           }
           break;
         case 'log':
@@ -188,7 +183,12 @@ heuristicLabServices.factory('WorkerService', ['$q', function ($q) {
     } else {
       console.log('Unknown message received from worker: ' + e.data);
     }
-  };
+  });
+
+  var service = {};
+
+  service.sandbox = $window.document.getElementById('sandbox');
+  service.messageQueue = [];
 
   service.doWork = function (data) {
     if (!data.operation || typeof(data.operation) !== "string") {
@@ -202,7 +202,7 @@ heuristicLabServices.factory('WorkerService', ['$q', function ($q) {
 
     // If there aren't other requests in queue, post the message to the worker
     if (service.messageQueue.length < 2) {
-      service.worker.postMessage(data);
+      service.sandbox.contentWindow.postMessage(data, '*');
     }
 
     return defer.promise;

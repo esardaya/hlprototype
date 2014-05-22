@@ -5,13 +5,14 @@ var heuristicLabControllers = angular.module('heuristicLabControllers', [
   'heuristicLabServices'
 ]);
 
-heuristicLabControllers.controller('HeuristicLabMainCtrl', ['$scope', '$window', 'SharedDataService',
-  function ($scope, $window, SharedDataService) {
+heuristicLabControllers.controller('HeuristicLabMainCtrl', ['$scope', '$window', '$http', 'SharedDataService',
+  'hlConfig', function ($scope, $window, $http, SharedDataService, hlConfig) {
     // Scope variables
     $scope.logMessages = [];
     $scope.isAuthenticated = SharedDataService.isAuthenticated;
     $scope.currentView = SharedDataService.currentView;
     $scope.experimentAvailable = false;
+    $scope.jobAvailable = false;
     $scope.progress = { visible: false, text: "", class: "progress", value: 0 };
 
     $scope.$on('currentViewUpdated', function () {
@@ -43,14 +44,33 @@ heuristicLabControllers.controller('HeuristicLabMainCtrl', ['$scope', '$window',
     });
 
     $scope.$on('experimentUpdated', function () {
-      $scope.experimentAvailable = (SharedDataService.experiment != null && SharedDataService.experiment.length > 0);
+      $scope.experimentAvailable = (SharedDataService.experiment != null &&
+        SharedDataService.experiment['Variations'].length > 0);
+    });
+
+    $scope.$on('jobUpdated', function () {
+      $scope.jobAvailable = SharedDataService.job.hasOwnProperty('HiveTasks') &&
+        SharedDataService.job['HiveTasks'].length > 0;
     });
 
     $scope.logout = function() {
-      SharedDataService.updateAuthenticated(false);
-      SharedDataService.updateAuthenticationToken(null);
+      SharedDataService.startLoading('Signing out ...');
 
-      $window.location.href = '#/login';
+      $http.post(hlConfig.url + 'login/Logout', { Token: SharedDataService.authenticationToken }).
+        success(function(data, status, headers, config) {
+          SharedDataService.stopLoading();
+          SharedDataService.updateAuthenticationToken(null);
+          SharedDataService.updateAuthenticated(false);
+          $window.location.href = '#/login';
+        }).
+        error(function(data, status, headers, config) {
+          if (data.Message) {
+            SharedDataService.addErrorMessage(data.Message);
+          } else {
+            SharedDataService.addErrorMessage("Could not connect to server");
+          }
+          SharedDataService.stopLoading();
+        });
     };
 
     function updateProgress(prefix, suffix, bytesLoaded, bytesTotal) {
@@ -80,35 +100,52 @@ heuristicLabControllers.controller('HeuristicLabMainCtrl', ['$scope', '$window',
 ]);
 
 heuristicLabControllers.controller('HeuristicLabLoginCtrl', ['$scope', '$http', '$window', 'SharedDataService',
-  function ($scope, $http, $window, SharedDataService) {
-    // Scope variables
-    $scope.username = null;
-    $scope.password = null;
-    $scope.errorMessage = null;
+  'hlConfig', function ($scope, $http, $window, SharedDataService, hlConfig) {
 
     if ($scope.isAuthenticated) {
       // User is already authenticated
       $window.location.href = '#/creation';
+      return;
     }
+
+    // Scope variables
+    $scope.username = null;
+    $scope.password = null;
+    $scope.rememberMe = false;
+    $scope.errorMessage = null;
+
+    /*chrome.storage.local.get('user', function(data) {
+      if (data.username && data.password) {
+        $scope.username = data.username;
+        $scope.password = data.password;
+
+        $scope.login();
+      }
+    });*/
 
     $scope.login = function() {
       SharedDataService.startLoading('Authenticating ...');
-      $http.post('http://localhost:51802/api/login', { username: $scope.username, password: $scope.password }).
+      $http.post(hlConfig.url + 'login/Authenticate', { username: $scope.username, password: $scope.password }).
         success(function(data, status, headers, config) {
-          SharedDataService.stopLoading();
           $scope.errorMessage = null;
           data = data.replace(/(^"|"$)/g, '');
           SharedDataService.updateAuthenticationToken(data);
           SharedDataService.updateAuthenticated(true);
 
+          SharedDataService.stopLoading();
+
+          /*if ($scope.rememberMe) {
+            chrome.storage.local.set({'user': { username: $scope.username, password: $scope.password}});
+          }*/
+
           $window.location.href = '#/creation';
-          // this callback will be called asynchronously
-          // when the response is available
         }).
         error(function(data, status, headers, config) {
-          $scope.errorMessage = data.Message;
-          // called asynchronously if an error occurs
-          // or server returns response with an error status.
+          if (data.Message) {
+            $scope.errorMessage = data.Message;
+          } else {
+            $scope.errorMessage = "Could not connect to server";
+          }
           SharedDataService.stopLoading();
         });
 
@@ -120,12 +157,11 @@ heuristicLabControllers.controller('HeuristicLabLoginCtrl', ['$scope', '$http', 
 heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$window', 'WorkerService', 'SharedDataService',
   'CreationService', function ($scope, $window, WorkerService, SharedDataService, CreationService) {
 
-    /*var sandbox = $window.document.getElementById('sandbox');
-
-    $window.addEventListener('message', function(event) {
-      console.log(event.data);
-    });*/
-
+    if (!$scope.isAuthenticated) {
+      // User is not authenticated
+      $window.location.href = '#/login';
+      return;
+    }
     // Model variables
     $scope.algorithms = CreationService.algorithms;
     $scope.problems = CreationService.problems;
@@ -136,9 +172,10 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$wind
     $scope.currentParameter = CreationService.currentParameter;
     $scope.currentParameterDetails = CreationService.currentParameterDetails;
     $scope.variations = CreationService.variations;
+    $scope.initialized =  CreationService.initialized;
 
     // Initialize
-    if (!CreationService.initialized) {
+    if (!$scope.initialized) {
       initialize();
     }
 
@@ -147,39 +184,39 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$wind
     // Listen to local changes to modify model service
     $scope.$watch('algorithms', function() {
       CreationService.updateAlgorithms($scope.algorithms);
-    });
+    }, true);
 
     $scope.$watch('problems', function() {
       CreationService.updateProblems($scope.problems);
-    });
+    }, true);
 
     $scope.$watch('parameters', function() {
       CreationService.updateParameters($scope.parameters);
-    });
+    }, true);
 
     $scope.$watch('parameterDetails', function() {
       CreationService.updateParameterDetails($scope.parameterDetails);
-    });
+    }, true);
 
     $scope.$watch('currentAlgorithm', function() {
       CreationService.updateCurrentAlgorithm($scope.currentAlgorithm);
-    });
+    }, true);
 
     $scope.$watch('currentProblem', function() {
       CreationService.updateCurrentProblem($scope.currentProblem);
-    });
+    }, true);
 
     $scope.$watch('currentParameter', function() {
       CreationService.updateCurrentParameter($scope.currentParameter);
-    });
+    }, true);
 
     $scope.$watch('currentParameterDetails', function() {
       CreationService.updateCurrentParameterDetails($scope.currentParameterDetails);
-    });
+    }, true);
 
     $scope.$watch('variations', function() {
       CreationService.updateVariations($scope.variations);
-    });
+    }, true);
 
     $scope.setAlgorithm = function (algorithm) {
       $scope.currentAlgorithm = algorithm;
@@ -311,13 +348,13 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$wind
       SharedDataService.startLoading('Generating Experiment ...');
       var promise = WorkerService.doWork({ operation: 'generateExperiment', data: $scope.parameterDetails });
       promise.then(function (data) {
-        $window.location.href = '#/results';
-        SharedDataService.stopLoading();
         var experiment = data != null ? data.experiment : { 'Variations': [] };
         SharedDataService.updateExperiment(experiment);
         if (experiment['Variations'].length > 0) {
           SharedDataService.updateCurrentOptimizer(experiment['Variations'][0]);
         }
+        SharedDataService.stopLoading();
+        $window.location.href = '#/upload';
       }, function (error) {
         SharedDataService.addErrorMessage(error.message);
       }, function (update) {
@@ -328,11 +365,11 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$wind
     function initialize() {
       // Show loading bar
       SharedDataService.startLoading('Initializing ...');
-      //sandbox.contentWindow.postMessage({ operation: 'initialize'}, '*');
       var promise = WorkerService.doWork({ operation: 'initialize', url: $window.document.location.toString() });
       promise.then(function () {
         SharedDataService.stopLoading();
         CreationService.initialized = true;
+        $scope.initialized = true;
         getAlgorithms();
       }, function (error) {
         SharedDataService.addErrorMessage(error.message);
@@ -469,11 +506,6 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$wind
         for (var i = 0; i < parameters.length; i++) {
           $scope.parameters[parameters[i]] = false;
         }
-
-        if (!$scope.isAuthenticated) {
-          // User is not authenticated
-          $window.location.href = '#/login';
-        }
       }, function (error) {
         SharedDataService.addErrorMessage(error.message);
       }, function (update) {
@@ -504,24 +536,27 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$wind
 ]);
 
 heuristicLabControllers.controller('HeuristicLabUploadCtrl', ['$scope', '$window', '$http', 'SharedDataService',
-  function ($scope, $window, $http, SharedDataService) {
-    $scope.experiment = SharedDataService.experiment;
-    $scope.currentOptimizer = SharedDataService.currentOptimizer;
+  'hlConfig', function ($scope, $window, $http, SharedDataService, hlConfig) {
 
     if (!$scope.isAuthenticated) {
       // User is not authenticated
       $window.location.href = '#/login';
+      return;
     }
+
+    $scope.experiment = SharedDataService.experiment;
+    $scope.currentOptimizer = SharedDataService.currentOptimizer;
 
     if ($scope.experiment == null || $scope.experiment['Variations'].length < 1) {
       $window.location.href = '#/creation';
+      return;
     }
 
-    SharedDataService.updateCurrentView('results');
+    SharedDataService.updateCurrentView('upload');
 
     $scope.$watch('currentOptimizer', function() {
       SharedDataService.updateCurrentOptimizer($scope.currentOptimizer);
-    });
+    }, true);
 
     $scope.setOptimizer = function(optimizer) {
       $scope.currentOptimizer = optimizer;
@@ -532,13 +567,13 @@ heuristicLabControllers.controller('HeuristicLabUploadCtrl', ['$scope', '$window
 
       $scope.experiment['Token'] = SharedDataService.authenticationToken;
 
-      $http.post('http://localhost:51802/api/job', $scope.experiment).
+      $http.post(hlConfig.url + 'job/Upload', $scope.experiment).
         success(function(data, status, headers, config) {
-          SharedDataService.updateCurrentJob(data);
+          SharedDataService.updateJob(data);
 
           SharedDataService.stopLoading();
 
-          $window.location.href = '#/job';
+          $window.location.href = '#/run';
         }).
         error(function(data, status, headers, config) {
           SharedDataService.stopLoading();
@@ -550,8 +585,8 @@ heuristicLabControllers.controller('HeuristicLabUploadCtrl', ['$scope', '$window
   }
 ]);
 
-heuristicLabControllers.controller('HeuristicLabJobCtrl', ['$scope', '$window', '$http', '$timeout', 'SharedDataService',
-  function ($scope, $window, $http, $timeout, SharedDataService) {
+heuristicLabControllers.controller('HeuristicLabRunCtrl', ['$scope', '$window', '$http', '$timeout', 'SharedDataService',
+  'hlConfig', function ($scope, $window, $http, $timeout, SharedDataService, hlConfig) {
 
     if (!$scope.isAuthenticated) {
       // User is not authenticated
@@ -560,17 +595,21 @@ heuristicLabControllers.controller('HeuristicLabJobCtrl', ['$scope', '$window', 
     }
 
     if (!SharedDataService.job.hasOwnProperty('HiveTasks') && job['HiveTasks'].length < 1) {
-      $window.location.href = '#/results'
+      $window.location.href = '#/upload';
+      return;
     }
+
+    SharedDataService.updateCurrentView('run');
 
     $scope.tasks = SharedDataService.job['HiveTasks'][0]['ChildHiveTasks'];
     $scope.currentTaskIndex = -1;
 
-    $timeout(refreshJobStatus, 5000);
+    $timeout(refreshJobStatus, hlConfig.refreshRate);
 
-    $scope.$on('currentJobUpdated', function () {
-      if (!SharedDataService.job.hasOwnProperty('HiveTasks') && job['HiveTasks'].length < 1) {
-        $window.location.href = '#/results'
+    $scope.$on('jobUpdated', function () {
+      if (!SharedDataService.job.hasOwnProperty('HiveTasks') && SharedDataService.job['HiveTasks'].length < 1) {
+        $window.location.href = '#/upload';
+        return;
       }
       $scope.tasks = SharedDataService.job['HiveTasks'][0]['ChildHiveTasks'];
     });
@@ -579,15 +618,55 @@ heuristicLabControllers.controller('HeuristicLabJobCtrl', ['$scope', '$window', 
       $scope.currentTaskIndex = index;
     };
 
+    $scope.resumeTask = function() {
+      var task = $scope.tasks[$scope.currentTaskIndex];
+      if (task && task['TaskId']) {
+        $http.post(hlConfig.url + 'job/ResumeTask', { TaskId: task['TaskId'],
+          Token: SharedDataService.authenticationToken}).
+          success(function (data, status, headers, config) {
+          }).
+          error(function (data, status, headers, config) {
+            SharedDataService.addErrorMessage('There was a problem resuming the task');
+          });
+      }
+    };
+
+    $scope.pauseTask = function() {
+      var task = $scope.tasks[$scope.currentTaskIndex];
+      if (task && task['TaskId']) {
+        $http.post(hlConfig.url + 'job/PauseTask', { TaskId: task['TaskId'],
+          Token: SharedDataService.authenticationToken}).
+          success(function (data, status, headers, config) {
+          }).
+          error(function (data, status, headers, config) {
+            SharedDataService.addErrorMessage('There was a problem pausing the task');
+          });
+      }
+    };
+
+
+    $scope.stopTask = function() {
+      var task = $scope.tasks[$scope.currentTaskIndex];
+      if (task && task['TaskId']) {
+        $http.post(hlConfig.url + 'job/StopTask', { TaskId: task['TaskId'],
+          Token: SharedDataService.authenticationToken}).
+          success(function (data, status, headers, config) {
+          }).
+          error(function (data, status, headers, config) {
+            SharedDataService.addErrorMessage('There was a problem stopping the task');
+          });
+      }
+    };
+
     function refreshJobStatus() {
-      $http.get('http://localhost:51802/api/job?jobId=' +
+      $http.get(hlConfig.url + 'job/Load?jobId=' +
         encodeURIComponent(SharedDataService.job['JobId']) + '&token=' +
         encodeURIComponent(SharedDataService.authenticationToken)).
         success(function(data, status, headers, config) {
-          SharedDataService.updateCurrentJob(data);
+          SharedDataService.updateJob(data);
           var experimentState = data['HiveTasks'][0]['State'];
           if (experimentState != 'Finished') {
-            $timeout(refreshJobStatus, 5000);
+            $timeout(refreshJobStatus, hlConfig.refreshRate);
           }
         }).
         error(function(data, status, headers, config) {

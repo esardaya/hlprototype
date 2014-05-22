@@ -8,7 +8,7 @@
             <h3 class="panel-title">Variations</h3>
           </div>
           <div class="panel-body">
-            <div class="list-group" id="optimizers">
+            <div class="list-group" slim-scroll="320">
               <a href="" class="list-group-item" ng-repeat="optimizer in experiment['Variations']"
                  ng-class="{active: currentOptimizer == optimizer}" ng-click="setOptimizer(optimizer)">
                 {{optimizer['Name']}}
@@ -30,7 +30,7 @@
   <div class="col-md-6">
     <div class="panel panel-default">
       <div class="panel-body">
-        <div id="variationDetailsPanel">
+        <div slim-scroll="413">
           <table class="table table-bordered">
             <thead>
               <tr>
@@ -52,13 +52,3 @@
     </div>
   </div>
 </div>
-
-<script>
-  $('#variationDetailsPanel').slimScroll({
-    height: '440px'
-  });
-
-  $('#optimizers').slimScroll({
-    height: '350px'
-  });
-</script>

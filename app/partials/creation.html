@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row" ng-show="initialized">
   <div class="col-md-6">
     <div class="row">
       <!-- Algorithms Panel -->
@@ -8,7 +8,7 @@
             <h3 class="panel-title">Algorithms</h3>
           </div>
           <div class="panel-body">
-            <div class="list-group" id="algorithms">
+            <div class="list-group" slim-scroll="300">
               <a href="" class="list-group-item" ng-repeat="algorithm in algorithms"
                  ng-class="{active: currentAlgorithm == algorithm}" ng-click="setAlgorithm(algorithm)">
                 {{algorithm}}
@@ -25,7 +25,7 @@
             <h3 class="panel-title">Problems</h3>
           </div>
           <div class="panel-body">
-            <div class="list-group" id="problems">
+            <div class="list-group" slim-scroll="300">
               <a href="" class="list-group-item" ng-repeat="problem in problems"
                  ng-class="{active: currentProblem == problem}" ng-click="setProblem(problem)">
                 {{problem}}
@@ -60,7 +60,7 @@
           </div>
           <div class="row top-buffer">
             <div class="col-md-6">
-              <div class="list-group" id="parameters">
+              <div class="list-group" slim-scroll="343">
                 <div class="list-group-item" ng-repeat="(parameter, checked) in parameters"
                      ng-class="{active: currentParameter == parameter}" ng-click="setParameter(parameter)">
                   <div class="checkbox">
@@ -72,7 +72,7 @@
               </div>
             </div>
             <div class="col-md-6">
-              <div id="paramDetails" class="list-group" ng-show="currentParameterDetails != null">
+              <div slim-scroll="343" class="list-group" ng-show="currentParameterDetails != null">
 
                 <!-- Details for 'choice' -->
                 <div class="list-group-item" ng-if="currentParameterDetails.type == 'choice'"
@@ -111,13 +111,3 @@
     </div>
   </div>
 </div>
-
-<!--<script>
-  $('#algorithms, #problems').slimScroll({
-    height: '300px'
-  });
-
-  $('#parameters, #paramDetails').slimScroll({
-    height: '380px'
-  });
-</script>-->

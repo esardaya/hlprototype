@@ -1,11 +1,15 @@
 /* app css stylesheet */
 
 .main {
-    height: 620px;
+    height: 655px;
 }
 
 .top-buffer {
     margin-top: 20px;
+}
+
+.right {
+    float: right;
 }
 
 .loading-progress {
@@ -14,10 +18,6 @@
 
 .log {
     height: 120px;
-}
-
-.navigation {
-    margin-top: 40px;
 }
 
 div.list-group-item.active {
@@ -46,8 +46,6 @@ div.list-group-item.active {
 .form-signin .form-control {
     position: relative;
     height: auto;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
     box-sizing: border-box;
     padding: 10px;
     font-size: 16px;

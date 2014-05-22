@@ -11,31 +11,37 @@
   </head>
   <body ng-controller="HeuristicLabMainCtrl">
 
-    <!--<iframe id="sandbox" src="sandbox.html" style="display: none"></iframe>-->
+    <iframe id="sandbox" src="sandbox.html" style="display: none"></iframe>
     <div class="col-md-12 container top-buffer">
       <div class="row">
-        <div class="col-md-8 col-md-offset-2">
+        <div class="col-md-12">
           <div class="panel panel-default main">
             <div class="panel-body">
               <div class="row">
-                <div class="col-md-2">
-                  <div class="btn-group navigation" ng-show="!progress.visible && isAuthenticated">
+                <div class="col-md-12">
+                  <img src="img/hl-logo.png"
+                       class="img-responsive center-block"/>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-3">
+                  <div class="btn-group btn-group-justified" ng-show="!progress.visible && isAuthenticated">
                     <a href="#/creation" class="btn btn-default" ng-class="{active: currentView == 'creation'}">
-                      <span class="glyphicon glyphicon-home"></span> Create
+                      <span class="glyphicon glyphicon-file"></span> Create
                     </a>
-                    <a href="#/results" class="btn btn-default"
-                       ng-class="{disabled: !experimentAvailable, active: currentView == 'results'}">
-                      <span class="glyphicon glyphicon-list-alt"></span> Results
+                    <a href="#/upload" class="btn btn-default"
+                       ng-class="{disabled: !experimentAvailable, active: currentView == 'upload'}">
+                      <span class="glyphicon glyphicon-list-alt"></span> Upload
+                    </a>
+                    <a href="#/run" class="btn btn-default"
+                       ng-class="{disabled: !jobAvailable, active: currentView == 'run'}">
+                      <span class="glyphicon glyphicon-tasks"></span> Run
                     </a>
                   </div>
                 </div>
-                <div class="col-md-8">
-                  <img src="http://dev.heuristiclab.com/trac/hl/core/chrome/site/HeuristicLabBanner.png"
-                       class="img-responsive center-block"/>
-                </div>
-                <div class="col-md-2">
-                  <input type="button" class="btn btn-primary" value="Sign out"
-                         ng-show="isAuthenticated" ng-click="logout()">
+                <div class="col-md-9">
+                  <input type="button" class="btn btn-default right" value="Sign out"
+                         ng-click="logout()" ng-show="!progress.visible && isAuthenticated">
                 </div>
               </div>
               <div class="row top-buffer">
@@ -57,12 +63,12 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-8 col-md-offset-2">
+        <div class="col-md-12">
           <div class="panel panel-info">
             <div class="panel-heading">
               <h3 class="panel-title">Log</h3>
             </div>
-            <div class="panel-body log">
+            <div class="panel-body log" slim-scroll="120">
               <div ng-repeat="entry in logMessages" ng-class="{error: entry.type == 'error'}">{{entry.message}}</div>
             </div>
           </div>
@@ -83,11 +89,5 @@
     <script src="js/controllers.js"></script>
     <script src="js/filters.js"></script>
     <script src="js/directives.js"></script>
-
-    <!--<script>
-      $('.log').slimScroll({
-        height: '120px'
-      });
-    </script>-_>
   </body>
 </html>

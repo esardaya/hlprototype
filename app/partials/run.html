@@ -1,0 +1,65 @@
+<div class="row">
+  <!-- Tasks Panel -->
+  <div class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Tasks</h3>
+      </div>
+      <div class="panel-body">
+        <div class="list-group" slim-scroll="377">
+          <a href="" class="list-group-item" ng-repeat="task in tasks"
+             ng-class="{active: $index == currentTaskIndex}" ng-click="setTaskIndex($index)">
+            <span class="glyphicon" ng-class="{
+                'glyphicon-ok': task['State'] == 'Finished',
+                'glyphicon-play': task['State'] == 'Calculating' || task['State'] == 'Transferring',
+                'glyphicon-pause': task['State'] == 'Paused',
+                'glyphicon-remove': task['State'] == 'Aborted' || task['State'] == 'Failed',
+                'glyphicon-off': task['State'] == 'Offline',
+                'glyphicon-time': task['State'] == 'Waiting'
+            }"></span>
+            {{task['Name']}}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Panel -->
+  <div class="col-md-8">
+    <div class="panel panel-default" ng-show="currentTaskIndex != -1">
+      <div class="panel-body">
+        <div>
+          <div class="row">
+            <div class="col-md-12">
+              <a class="btn btn-default" ng-class="{disabled: tasks[currentTaskIndex]['State'] != 'Paused'}"
+                      ng-click="resumeTask()">
+                <span class="glyphicon glyphicon-play"></span>
+              </a>
+              <a class="btn btn-default" ng-class="{disabled: tasks[currentTaskIndex]['State'] != 'Calculating'}"
+                      ng-click="pauseTask()">
+                <span class="glyphicon glyphicon-pause"></span>
+              </a>
+              <a class="btn btn-default" ng-class="{disabled: tasks[currentTaskIndex]['State'] != 'Calculating' &&
+                        tasks[currentTaskIndex]['State'] != 'Waiting' && tasks[currentTaskIndex]['State'] != 'Paused'}"
+                      ng-click="stopTask()">
+                <span class="glyphicon glyphicon-stop"></span>
+              </a>
+            </div>
+          </div>
+          <div class="row top-buffer">
+            <div class="col-md-12">
+              <table class="table table-bordered">
+                <tbody>
+                  <tr ng-repeat="(name, data) in tasks[currentTaskIndex]" ng-show="name != 'ChildHiveTasks'">
+                    <td>{{name}}</td>
+                    <td>{{(data != null && data != '') ? data : '-'}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
