@@ -44,13 +44,20 @@
                       ng-click="stopTask()">
                 <span class="glyphicon glyphicon-stop"></span>
               </a>
+
+              <button class="btn btn-default right" data-toggle="modal" data-target="#resultsModal"
+                      ng-class="{disabled: tasks[currentTaskIndex]['State'] != 'Finished'}">
+                View Results
+              </button>
+
             </div>
           </div>
           <div class="row top-buffer">
             <div class="col-md-12">
               <table class="table table-bordered">
                 <tbody>
-                  <tr ng-repeat="(name, data) in tasks[currentTaskIndex]" ng-show="name != 'ChildHiveTasks'">
+                  <tr ng-repeat="(name, data) in tasks[currentTaskIndex]"
+                      ng-show="name != 'ChildHiveTasks' && name != 'Results'">
                     <td>{{name}}</td>
                     <td>{{(data != null && data != '') ? data : '-'}}</td>
                   </tr>
@@ -59,6 +66,34 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <div ng-show="currentTaskIndex == -1">
+      <span class="glyphicon glyphicon-exclamation-sign"></span>
+      Select a task from the left list to view more information about it.
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="resultsModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="modalLabel">Run Results</h4>
+      </div>
+      <div class="modal-body">
+        <table class="table table-bordered">
+          <tbody>
+            <tr ng-repeat="(name, data) in tasks[currentTaskIndex]['Results']">
+              <td>{{name}}</td>
+              <td>{{(data != null && data != '') ? data : '-'}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
