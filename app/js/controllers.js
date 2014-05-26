@@ -128,7 +128,8 @@ heuristicLabControllers.controller('HeuristicLabLoginCtrl', ['$scope', '$http', 
         if (data.user.username && data.user.password) {
           $scope.$apply(function () {
             $scope.username = data.user.username;
-            $scope.password = data.user.password;
+            var decrypted = CryptoJS.AES.decrypt(data.user.password, "HeuristicLab").toString(CryptoJS.enc.Utf8);
+            $scope.password = decrypted;
 
             $scope.login();
           });
@@ -146,7 +147,8 @@ heuristicLabControllers.controller('HeuristicLabLoginCtrl', ['$scope', '$http', 
           SharedDataService.updateAuthenticated(true);
 
           if ($scope.rememberMe) {
-            chrome.storage.local.set({'user': { username: $scope.username, password: $scope.password}}, function() {
+            var encrypted = CryptoJS.AES.encrypt($scope.password, "HeuristicLab").toString();
+            chrome.storage.local.set({'user': { username: $scope.username, password: encrypted}}, function() {
               $scope.$apply(function() {
                 $location.path('creation');
               });

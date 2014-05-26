@@ -8,16 +8,16 @@
     "storage"
   ],
   "sandbox": {
-    "pages": ["app/sandbox.html"]
+    "pages": ["sandbox.html"]
   },
   "app": {
     "background": {
-      "scripts": ["background.js"]
+      "scripts": ["js/background.js"]
     }
   },
   "icons": {
-    "16": "app/img/hl_icon_16.png",
-    "48": "app/img/hl_icon_48.png",
-    "128": "app/img/hl_icon_128.png"
+    "16": "icons/hl_icon_16.png",
+    "48": "icons/hl_icon_48.png",
+    "128": "icons/hl_icon_128.png"
   }
 }
