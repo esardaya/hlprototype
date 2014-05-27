@@ -1,3 +1,9 @@
+Number.prototype.toFixedDown = function(digits) {
+  var re = new RegExp("(\\d+\\.\\d{" + digits + "})(\\d)"),
+    m = this.toString().match(re);
+  return m ? parseFloat(m[1]) : this.valueOf();
+};
+
 function finishedLoading() {
   assembly = JSIL.GetAssembly("HeuristicLab.Optimization-3.3", true);
   assemblies = GetAssemblies();
@@ -190,8 +196,13 @@ function getParameterDetails(data) {
         }
         break;
       case 'intarray':
+        values = paramData.Data.array;
+        break;
       case 'doublearray':
         values = paramData.Data.array;
+        for (var v = 0; v < values.length; v++) {
+          values[v] = values[v].toFixedDown(2);
+        }
         break;
       default:
 

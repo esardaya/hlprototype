@@ -89,7 +89,6 @@ heuristicLabControllers.controller('HeuristicLabMainCtrl', ['$scope', '$location
           SharedDataService.updateAuthenticated(false);
           chrome.storage.local.remove('user', function() {
             $scope.$apply(function() {
-              SharedDataService.stopLoading();
               $location.path('login');
             });
           });
@@ -673,6 +672,52 @@ heuristicLabControllers.controller('HeuristicLabRunCtrl', ['$scope', '$location'
           error(function (data, status, headers, config) {
             SharedDataService.addErrorMessage('There was a problem stopping the task');
           });
+      }
+    };
+
+    $scope.isJobFinished = function() {
+      //return SharedDataService.job['ExecutionState'] == 'Finished';
+      for (var i = 0; i < $scope.tasks.length; i++) {
+        if ($scope.tasks[i]['State'] != 'Finished' && $scope.tasks[i]['State'] != 'Aborted') {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    $scope.downloadExperiment = function() {
+      if (SharedDataService.job['JobId']) {
+        chrome.fileSystem.chooseEntry({type: 'saveFile', suggestedName: 'experiment', accepts: [
+          {extensions: ['hl']}
+        ],
+          acceptsAllTypes: false }, function (writableFileEntry) {
+          $scope.$apply(function () {
+            SharedDataService.startLoading('Saving Experiment');
+          });
+          writableFileEntry.createWriter(function (writer) {
+            writer.onerror = function (e) {
+              SharedDataService.addErrorMessage('Write failed: ' + e.toString());
+            };
+            writer.onwriteend = function (e) {
+              SharedDataService.addLogMessage('Write complete');
+              $scope.$apply(function () {
+                SharedDataService.stopLoading();
+              });
+            };
+
+            var url = hlConfig.url + 'job/Download?jobId=' +
+              encodeURIComponent(SharedDataService.job['JobId']) + '&token=' +
+              encodeURIComponent(SharedDataService.authenticationToken);
+            $http.get(url, {responseType: "blob"}).
+              success(function (data, status, headers, config) {
+                writer.write(data);
+              }).
+              error(function (data, status, headers, config) {
+                console.error(data);
+                SharedDataService.stopLoading();
+              });
+          });
+        });
       }
     };
 
