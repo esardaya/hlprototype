@@ -3,7 +3,7 @@
     <form class="form-signin" role="form" ng-submit="login()">
       <h2 class="form-signin-heading">Sign in</h2>
       <div class="alert alert-danger" ng-show="errorMessage != null">
-        <strong>Error</strong> {{errorMessage}}
+        <strong>Error:</strong> {{errorMessage}}
       </div>
       <input type="text" class="form-control" placeholder="Username" ng-model="username" required autofocus>
       <input type="password" class="form-control" placeholder="Password" ng-model="password" required>

@@ -188,10 +188,14 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
     $scope.currentParameterDetails = CreationService.currentParameterDetails;
     $scope.variations = CreationService.variations;
     $scope.initialized =  CreationService.initialized;
+    $scope.generationValues = [];
+    $scope.newValue = { value: null, isValid: true};
 
     // Initialize
     if (!$scope.initialized) {
       initialize();
+    } else {
+      SharedDataService.stopLoading();
     }
 
     SharedDataService.updateCurrentView('creation');
@@ -227,6 +231,9 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
 
     $scope.$watch('currentParameterDetails', function() {
       CreationService.updateCurrentParameterDetails($scope.currentParameterDetails);
+      if ($scope.currentParameterDetails != null) {
+        $scope.calculateVariations();
+      }
     }, true);
 
     $scope.$watch('variations', function() {
@@ -264,8 +271,6 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
       // toggleParameter will be called before this function when clicking on a checkbox
       if ($scope.parameters[parameter]) {
         getParameterDetails();
-      } else {
-        $scope.calculateVariations();
       }
     };
 
@@ -276,10 +281,14 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
 
     $scope.toggleChoice = function(value) {
       $scope.currentParameterDetails.values[value] = !$scope.currentParameterDetails.values[value];
-      $scope.calculateVariations();
     };
 
-    $scope.validateInput = function(input) {
+    $scope.addNewValue = function() {
+      $scope.currentParameterDetails.values.push($scope.newValue);
+      $scope.newValue = { value: null, isValid: true};
+    };
+
+    $scope.validateInput = function(input, isNewValue) {
       if ($scope.currentParameterDetails != null) {
         if ($scope.currentParameterDetails.type == 'intarray') {
           // Validate integer
@@ -287,12 +296,14 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
           if (intValue != input.value || intValue < 0) {
             if (input.isValid) {
               input.isValid = false;
-              $scope.currentParameterDetails.invalidCount++;
+              if (!isNewValue)
+                $scope.currentParameterDetails.invalidCount++;
             }
           } else {
             if (!input.isValid) {
               input.isValid = true;
-              $scope.currentParameterDetails.invalidCount--;
+              if (!isNewValue)
+                $scope.currentParameterDetails.invalidCount--;
             }
           }
         } else if ($scope.currentParameterDetails.type == 'doublearray') {
@@ -301,12 +312,14 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
           if (floatValue != input.value || floatValue < 0) {
             if (input.isValid) {
               input.isValid = false;
-              $scope.currentParameterDetails.invalidCount++;
+              if (!isNewValue)
+                $scope.currentParameterDetails.invalidCount++;
             }
           } else {
             if (!input.isValid) {
               input.isValid = true;
-              $scope.currentParameterDetails.invalidCount--;
+              if (!isNewValue)
+                $scope.currentParameterDetails.invalidCount--;
             }
           }
         }
@@ -377,6 +390,93 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
         handleNotification(update);
       });
     };
+
+    $scope.areGenerationValuesValid = function() {
+      $scope.validationError = null;
+      var intOnly = $scope.currentParameterDetails.type === 'intarray';
+
+      for(var key in $scope.generationValues) {
+        if ($scope.generationValues.hasOwnProperty(key)) {
+          var value = $scope.generationValues[key];
+          var parsed = intOnly ?  parseInt(value) : parseFloat(value);
+          if (parsed != value) {
+            $scope.validationError = 'Only valid ' + (intOnly ? 'integer' : 'floating point') + ' values are allowed';
+            return false;
+          }
+
+          if (parsed < 0) {
+            $scope.validationError = 'Only non-negative values are allowed';
+            return false;
+          }
+        }
+      }
+
+      if ($scope.generationValues['Minimum'] > $scope.generationValues['Maximum']) {
+        $scope.validationError = 'Minimum cannot be higher than maximum';
+        return false;
+      }
+
+      return true;
+    };
+
+    $scope.generateValues = function() {
+      var values = [];
+      var min = $scope.generationValues['Minimum'];
+      var max = $scope.generationValues['Maximum'];
+      var step = $scope.generationValues['Step'];
+
+      var intOnly = $scope.currentParameterDetails.type === 'intarray';
+
+      var minimumIncluded = false;
+      var value = max;
+      var i = 1;
+      while (value >= min) {
+        if (isAlmost(value, min)) {
+          values.push({ value: min, isValid: true});
+          minimumIncluded = true;
+        } else {
+          values.push({ value: value, isValid: true});
+        }
+
+        if (step == 0) break;
+
+        if (intOnly) {
+          value = parseInt(max - i * step);
+        } else {
+          value = max - i * step;
+        }
+        i++;
+      }
+      if (!minimumIncluded) {
+        values.push({ value: min, isValid: true});
+      }
+
+      $scope.currentParameterDetails.values = values;
+    };
+
+    $scope.removeValue = function(value) {
+      var index = $scope.currentParameterDetails.values.indexOf(value);
+      if (index > -1) {
+        $scope.currentParameterDetails.values.splice(index, 1);
+      }
+    };
+
+    $scope.isArrayValue = function() {
+      return $scope.currentParameterDetails != null && ($scope.currentParameterDetails.type === 'intarray' ||
+        $scope.currentParameterDetails.type === 'doublearray');
+    };
+
+    function isAlmost(value, target) {
+      if (!isFinite(value)) {
+        if (value > 0)
+          return target == Number.POSITIVE_INFINITY;
+        else
+          return target == Number.NEGATIVE_INFINITY;
+
+      } else {
+        return Math.abs(value - target) < 1.0E-12;
+      }
+    }
 
     function initialize() {
       // Show loading bar
@@ -459,7 +559,11 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
       if ($scope.currentParameter in $scope.parameterDetails) {
         if ($scope.parameterDetails[$scope.currentParameter] != null) {
           $scope.currentParameterDetails = $scope.parameterDetails[$scope.currentParameter];
-          $scope.calculateVariations();
+          if ($scope.currentParameterDetails.type === 'intarray' ||
+              $scope.currentParameterDetails.type === 'doublearray') {
+            getDefaultGenerationValues();
+            $scope.newValue = { value: null, isValid: true};
+          }
           return;
         }
       }
@@ -483,10 +587,12 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
             case 'intarray':
             case 'doublearray':
               $scope.currentParameterDetails.values = [];
+              $scope.newValue = { value: null, isValid: true};
               for (var a = 0; a < data.values.length; a++) {
                 $scope.currentParameterDetails.values.push({ value: data.values[a], isValid: true });
                 $scope.currentParameterDetails.invalidCount = 0;
               }
+              getDefaultGenerationValues();
               break;
             case 'bool':
               // No other data necessary besides the type
@@ -499,7 +605,6 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
         }
         // Add details to cache
         $scope.parameterDetails[$scope.currentParameter] = $scope.currentParameterDetails;
-        $scope.calculateVariations();
       }, function (error) {
         SharedDataService.addErrorMessage(error.message);
       }, function (update) {
@@ -548,6 +653,29 @@ heuristicLabControllers.controller('HeuristicLabCreationCtrl', ['$scope', '$loca
       }, function (update) {
         handleNotification(update);
       });
+    }
+
+    function getDefaultGenerationValues() {
+      //var intOnly = $scope.currentParameterDetails.type === 'intarray';
+      var values = getParameterValues($scope.currentParameterDetails.values);
+      var min, max, step;
+      var len = values.length;
+      min = Math.min.apply(Math, values);
+      max = Math.max.apply(Math, values);
+      step = len >= 2 ? Math.abs(values[len - 1] - values[len - 2]) : 1;
+
+      $scope.generationValues = [];
+      $scope.generationValues['Minimum'] = min;
+      $scope.generationValues['Maximum'] = max;
+      $scope.generationValues['Step'] = step;
+    }
+
+    function getParameterValues(array) {
+      var values = [];
+      for (var i = 0; i < array.length; i++) {
+        values.push(array[i].value);
+      }
+      return values;
     }
   }
 ]);

@@ -62,8 +62,9 @@ function saveDataState(data) {
           case 'intarray':
             if (program.intParameters.ContainsKey(parameter)) {
               var intArray = program.intParameters.get_Item(parameter);
+              intArray.array = [];
               for (var i = 0; i < details.values.length; i++) {
-                intArray.array[i] = details.values[i].value;
+                intArray.array.push(details.values[i].value);
               }
               program.intParameters.set_Item(parameter, intArray);
             }
@@ -71,8 +72,9 @@ function saveDataState(data) {
           case 'doublearray':
             if (program.doubleParameters.ContainsKey(parameter)) {
               var doubleArray = program.doubleParameters.get_Item(parameter);
+              doubleArray.array = [];
               for (var d = 0; d < details.values.length; d++) {
-                doubleArray.array[d] = details.values[d].value;
+                doubleArray.array.push(details.values[d].value);
               }
               program.doubleParameters.set_Item(parameter, doubleArray);
               paramValues[parameter.Name].Data = doubleArray;
