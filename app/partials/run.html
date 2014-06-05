@@ -28,7 +28,7 @@
     </div>
     <div class="row">
       <div class="col-md-12">
-        <a href="" class="btn btn-primary" ng-class="{disabled: !isJobFinished()}" ng-click="downloadExperiment()">
+        <a href="" class="btn btn-primary" ng-class="{disabled: !jobFinished}" ng-click="downloadExperiment()">
           Download Experiment
         </a>
       </div>
@@ -57,10 +57,9 @@
               </a>
 
               <button class="btn btn-default right" data-toggle="modal" data-target="#resultsModal"
-                      ng-class="{disabled: tasks[currentTaskIndex]['State'] != 'Finished'}">
+                      data-backdrop="static" ng-class="{disabled: tasks[currentTaskIndex]['State'] != 'Finished'}">
                 View Results
               </button>
-
             </div>
           </div>
           <div class="row top-buffer">
@@ -68,7 +67,7 @@
               <table class="table table-bordered">
                 <tbody>
                   <tr ng-repeat="(name, data) in tasks[currentTaskIndex]"
-                      ng-show="name != 'ChildHiveTasks' && name != 'Results'">
+                      ng-show="name != 'ChildHiveTasks' && name != 'Results' && name != 'Parameters'">
                     <td>{{name}}</td>
                     <td>{{(data != null && data != '') ? data : '-'}}</td>
                   </tr>
@@ -87,7 +86,7 @@
 </div>
 
 <div class="modal fade" id="resultsModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -98,7 +97,10 @@
           <tbody>
             <tr ng-repeat="(name, data) in tasks[currentTaskIndex]['Results']">
               <td>{{name}}</td>
-              <td>{{(data != null && data != '') ? data : '-'}}</td>
+              <td ng-if="name != 'Qualities'">{{(data != null && data != '') ? data : '-'}}</td>
+              <td ng-if="name == 'Qualities'">
+                <div qualities-chart="{{currentTaskIndex}}" style="height: 380px"></div>
+              </td>
             </tr>
           </tbody>
         </table>

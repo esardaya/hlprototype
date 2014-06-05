@@ -13,6 +13,10 @@
     <script id="worker" type="javascript">
       "use strict";
 
+      if(typeof console === "undefined") {
+        var console = { log: function (logMsg) { postMessage({operation: 'log', message: logMsg }); } };
+      }
+
       var jsilConfig = {};
 
       var window = {

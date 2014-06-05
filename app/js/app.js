@@ -5,7 +5,8 @@
 var heuristicLab = angular.module('heuristicLab', [
   'ngRoute',
   'heuristicLabControllers',
-  'heuristicLabServices'
+  'heuristicLabServices',
+  'heuristicLabDirectives'
 ]);
 
 heuristicLab.config(['$compileProvider',
@@ -33,24 +34,15 @@ heuristicLab.config(['$routeProvider',
         templateUrl: 'partials/run.html',
         controller: 'HeuristicLabRunCtrl'
       }).
+      when('/analysis', {
+        templateUrl: 'partials/analysis.html',
+        controller: 'HeuristicLabAnalysisCtrl'
+      }).
       otherwise({
         redirectTo: '/login'
       });
   }
 ]);
-
-heuristicLab.directive('slimScroll', function() {
-  return {
-    // Restrict it to be an attribute in this case
-    restrict: 'A',
-    // responsible for registering DOM listeners as well as updating the DOM
-    link: function(scope, element, attrs) {
-      $(element).slimScroll({
-        height: attrs.slimScroll + 'px'
-      });
-    }
-  };
-});
 
 heuristicLab.constant('hlConfig', {
   url: 'http://localhost:51802/api/',

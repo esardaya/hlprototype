@@ -66,7 +66,7 @@ heuristicLabServices.factory('CreationService', ['$rootScope', function ($rootSc
   return service;
 }]);
 
-heuristicLabServices.factory('SharedDataService', ['$rootScope', function ($rootScope) {
+heuristicLabServices.factory('SharedDataService', ['$rootScope', '$filter', function ($rootScope, $filter) {
 
   var service = {};
 
@@ -80,7 +80,9 @@ heuristicLabServices.factory('SharedDataService', ['$rootScope', function ($root
   service.isAuthenticated = false;
   service.authenticationToken = null;
 
-  service.job = {};
+  service.jobId = null;
+  service.tasks = [];
+  service.isJobFinished = false;
 
   function addLogEntry(type, message) {
     var lines = message.split("\n");
@@ -140,9 +142,40 @@ heuristicLabServices.factory('SharedDataService', ['$rootScope', function ($root
     $rootScope.$broadcast("currentOptimizerUpdated");
   };
 
-  service.updateJob = function (job) {
-    this.job = job;
-    $rootScope.$broadcast("jobUpdated");
+  service.updateJobId = function (jobId) {
+    this.jobId = jobId;
+  };
+
+  service.updateIsJobFinished = function (isJobFinished) {
+    service.isJobFinished = isJobFinished;
+    $rootScope.$broadcast("isJobFinishedUpdated");
+  };
+
+  service.updateTasks = function (job) {
+    if (job['ExecutionState']) {
+      if (job['ExecutionState'] == 'Stopped' && !service.isJobFinished) {
+        this.updateIsJobFinished(true);
+      } else if (job['ExecutionState'] != 'Stopped' && service.isJobFinished) {
+        this.updateIsJobFinished(false);
+      }
+    }
+    if (!job.hasOwnProperty('HiveTasks') && job['HiveTasks'].length < 1) {
+      return;
+    }
+
+    this.tasks = $filter('orderBy')(job['HiveTasks'][0]['ChildHiveTasks'], 'Name');
+
+    var finished = 0;
+
+    for (var i = 0; i < this.tasks.length; i++) {
+      if (this.tasks[i]['State'] == 'Finished') {
+        finished++;
+      }
+    }
+
+    this.updateIsJobFinished(finished == this.tasks.length);
+
+    $rootScope.$broadcast("tasksUpdated");
   };
 
   return service;
@@ -209,4 +242,77 @@ heuristicLabServices.factory('WorkerService', ['$q', '$window', function ($q, $w
   };
 
   return service;
+}]);
+
+heuristicLabServices.factory('StorageService', ['$q', '$timeout', function($q, $timeout) {
+  var service = {};
+
+  service.saveUser = function (username, password) {
+    var encrypted = CryptoJS.AES.encrypt(password, "HeuristicLab").toString();
+
+    var defer = $q.defer();
+
+    if (typeof chrome === "undefined") {
+      localStorage['user'] = JSON.stringify({ username: username, password: encrypted});
+      // "Simulate" an async operation
+      $timeout(defer.resolve, 300);
+    } else {
+      chrome.storage.local.set({'user': { username: username, password: encrypted}}, function() {
+        defer.resolve();
+      });
+    }
+
+    return defer.promise;
+  };
+
+  service.loadUser = function() {
+    var defer = $q.defer();
+    var userData = null;
+
+    if (typeof chrome === "undefined") {
+      if (localStorage.hasOwnProperty('user')) {
+        var jsonData = JSON.parse(localStorage['user']);
+
+        if (jsonData != null) {
+          var decrypted = CryptoJS.AES.decrypt(jsonData.password, "HeuristicLab").toString(CryptoJS.enc.Utf8);
+          userData = {username: jsonData.username, password: decrypted};
+        }
+      }
+
+      $timeout(function() {
+        defer.resolve(userData);
+      }, 300);
+    } else {
+      chrome.storage.local.get('user', function(data) {
+        if (data.user) {
+          if (data.user.username && data.user.password) {
+            var decrypted = CryptoJS.AES.decrypt(data.user.password, "HeuristicLab").toString(CryptoJS.enc.Utf8);
+            userData = {username: data.user.username, password: decrypted};
+          }
+        }
+
+        defer.resolve(userData);
+      });
+    }
+
+    return defer.promise;
+  };
+
+  service.removeUser = function() {
+    var defer = $q.defer();
+    if (typeof chrome == "undefined") {
+      localStorage['user'] = null;
+      // "Simulate" an async operation
+      $timeout(defer.resolve, 300);
+    } else {
+      chrome.storage.local.remove('user', function() {
+        defer.resolve();
+      });
+    }
+
+    return defer.promise;
+  };
+
+  return service;
+
 }]);

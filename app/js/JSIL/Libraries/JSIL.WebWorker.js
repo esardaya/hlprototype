@@ -41,7 +41,6 @@ JSIL.WebWorker.PageVisibilityService.prototype.get = function () {
   return true;
 };
 
-
 JSIL.WebWorker.RunLaterService = function () {
   this.queue = [];
   this.pending = false;
@@ -476,7 +475,7 @@ function pollAssetQueue() {
   var state = this;
 
   var w = 0;
-  updateProgressBar("Downloading: ", "kb", state.bytesLoaded / 1024, state.assetBytes / 1024);
+  updateProgressBar("Initializing ...", null, -1, -1);
 
   var makeStepCallback = function (state, type, sizeBytes, i, name) {
     return function (finish) {
@@ -643,7 +642,7 @@ function beginLoading() {
 
     seenFilenames[filename] = true;
     allAssetsToLoad.push(assetSpec);
-  }
+  };
 
   var allAssetsToLoad = [];
   if (typeof (window.assetsToLoad) !== "undefined") {

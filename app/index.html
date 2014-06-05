@@ -7,6 +7,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="bower_components/angular/angular-csp.css">
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="css/flexigrid.css">
     <link rel="stylesheet" href="css/app.css"/>
   </head>
   <body ng-controller="HeuristicLabMainCtrl">
@@ -24,7 +25,7 @@
                 </div>
               </div>
               <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-4">
                   <div class="btn-group btn-group-justified" ng-show="!progress.visible && isAuthenticated">
                     <a href="#/creation" class="btn btn-default" ng-class="{active: currentView == 'creation'}">
                       <span class="glyphicon glyphicon-file"></span> Create
@@ -37,9 +38,13 @@
                        ng-class="{disabled: !jobAvailable, active: currentView == 'run'}">
                       <span class="glyphicon glyphicon-tasks"></span> Run
                     </a>
+                    <a href="#/analysis" class="btn btn-default"
+                       ng-class="{disabled: !jobFinished, active: currentView == 'analysis'}">
+                      <span class="glyphicon glyphicon-list-alt"></span> Analyze
+                    </a>
                   </div>
                 </div>
-                <div class="col-md-9">
+                <div class="col-md-8">
                   <input type="button" class="btn btn-default right" value="Sign out"
                          ng-click="logout()" ng-show="!progress.visible && isAuthenticated">
                 </div>
@@ -83,11 +88,19 @@
     <script src="bower_components/jquery/jquery.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="bower_components/slimScroll/jquery.slimscroll.js"></script>
+    <script src="bower_components/highcharts-release/highcharts.js"></script>
+    <script src="bower_components/highcharts-release/highcharts-more.js"></script>
+    <script src="js/flexigrid.js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/angular-route/angular-route.js"></script>
     <script src="js/app.js"></script>
     <script src="js/services.js"></script>
-    <script src="js/controllers.js"></script>
+    <script src="js/main-controller.js"></script>
+    <script src="js/login-controller.js"></script>
+    <script src="js/creation-controller.js"></script>
+    <script src="js/upload-controller.js"></script>
+    <script src="js/run-controller.js"></script>
+    <script src="js/analysis-controller.js"></script>
     <script src="js/filters.js"></script>
     <script src="js/directives.js"></script>
     <script src="bower_components/crypto-js/rollups/aes.js"></script>

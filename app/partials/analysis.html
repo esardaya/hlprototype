@@ -1,0 +1,74 @@
+<div class="row">
+  <div class="col-md-3">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Analysis Types</h3>
+      </div>
+      <div class="panel-body">
+        <div class="list-group" slim-scroll="373">
+          <a href="" class="list-group-item" ng-repeat="type in types"
+             ng-class="{active: type == selectedType}" ng-click="selectType(type)">
+            {{type}}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-9">
+    <div ng-show="selectedType == 'Table'">
+      <table id="analysisTable">
+        <thead>
+          <tr>
+            <th width="100">
+              Name
+            </th>
+            <th width="100" ng-repeat="(name, value) in data[0]['values']">
+              {{name}}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="row in data">
+            <td>
+              {{row['name']}}
+            </td>
+            <td ng-repeat="(name, value) in row['values']" resizable-cols="analysisTable">
+              {{value}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div ng-show="selectedType == 'Bubble Chart'">
+      <div class="row">
+        <div class="col-md-12">
+          <form class="form-inline" role="form">
+            <div class="form-group">
+              <label for="ySelect" class="control-label">Y Axis:</label>
+              <select id="ySelect" class="form-control" ng-model="selectedYAxis">
+                <option ng-repeat="option in options" value="{{option}}">{{option}}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="xSelect" class="control-label">X Axis:</label>
+              <select id="xSelect" class="form-control" ng-model="selectedXAxis">
+                <option ng-repeat="option in options" value="{{option}}">{{option}}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <a href="" class="btn btn-default" ng-click="generateBubbleChart()">Generate</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div id="analysisBubbleChart" style="height: 400px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
