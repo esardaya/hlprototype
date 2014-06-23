@@ -41,34 +41,40 @@
       </table>
     </div>
 
-    <div ng-show="selectedType == 'Bubble Chart'">
+    <div ng-show="selectedType == 'Bubble Chart' || selectedType == 'Box Plot'">
       <div class="row">
-        <div class="col-md-12">
-          <form class="form-inline" role="form">
-            <div class="form-group">
-              <label for="ySelect" class="control-label">Y Axis:</label>
-              <select id="ySelect" class="form-control" ng-model="selectedYAxis">
-                <option ng-repeat="option in options" value="{{option}}">{{option}}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="xSelect" class="control-label">X Axis:</label>
-              <select id="xSelect" class="form-control" ng-model="selectedXAxis">
-                <option ng-repeat="option in options" value="{{option}}">{{option}}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <a href="" class="btn btn-default" ng-click="generateBubbleChart()">Generate</a>
-            </div>
-          </form>
+        <div class="col-md-5">
+          <div class="form-group form-inline">
+            <label for="ySelect" class="control-label">Y Axis:</label>
+            <select id="ySelect" class="form-control" ng-model="selectedYAxis" style="width: 280px;">
+              <option ng-repeat="option in options" value="{{option}}">{{option}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="form-group form-inline">
+            <label for="xSelect" class="control-label">X Axis:</label>
+            <select id="xSelect" class="form-control" ng-model="selectedXAxis" style="width: 280px;">
+              <option ng-repeat="option in options" value="{{option}}">{{option}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <a href="" class="btn btn-default right" ng-click="generateChart()"
+               ng-class="{disabled: selectedXAxis == null || selectedYAxis == null}">
+              Generate
+            </a>
+          </div>
         </div>
       </div>
 
       <div class="row">
         <div class="col-md-12">
-          <div id="analysisBubbleChart" style="height: 400px"></div>
+          <div id="analysisChart" style="height: 400px"></div>
         </div>
       </div>
     </div>
   </div>
+</div>
 </div>
